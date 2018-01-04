@@ -1,6 +1,7 @@
 package cn.imrhj.wechatjump
 
 import android.annotation.TargetApi
+import android.app.Activity
 import android.content.Intent
 import android.graphics.PixelFormat
 import android.net.Uri
@@ -14,7 +15,7 @@ import android.view.WindowManager.LayoutParams.*
 import android.widget.Button
 import kotlinx.android.synthetic.main.activity_main.*
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : Activity() {
     private var show = false
     private var fullShow = false
     private var controlButton: Button? = null
