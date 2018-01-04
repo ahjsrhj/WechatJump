@@ -1,0 +1,64 @@
+apply plugin: 'com.android.application'
+
+apply plugin: 'kotlin-android'
+
+apply plugin: 'kotlin-android-extensions'
+
+Properties props = new Properties()
+boolean isHasFile = false
+File propFile = file('../local.properties')
+if (propFile.exists()) {
+    isHasFile = true
+    props.load(new FileInputStream(propFile))
+}
+
+android {
+    compileSdkVersion 26
+    defaultConfig {
+        applicationId "cn.imrhj.wechatjump"
+        minSdkVersion 19
+        targetSdkVersion 26
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+
+    signingConfigs {
+        defaultConfig {
+            keyAlias isHasFile ? props['ALIAS_NAME'] : System.getenv("ALIAS_NAME")
+            keyPassword isHasFile ? props['ALIAS_PASS'] : System.getenv("ALIAS_PASS")
+            storePassword isHasFile ? props['KEYSTORE_PASS'] : System.getenv("KEYSTORE_PASS")
+            storeFile isHasFile ? file(props['KEYSTORE_URL']) : file("../.hexer.keystore")
+        }
+    }
+
+    buildTypes {
+        debug {
+            debuggable true
+            minifyEnabled false
+            zipAlignEnabled false
+            shrinkResources false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.defaultConfig
+        }
+
+        release {
+            debuggable false
+            minifyEnabled true
+            zipAlignEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.defaultConfig
+        }
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation"org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
+    implementation 'com.android.support:appcompat-v7:26.1.0'
+    implementation 'com.android.support.constraint:constraint-layout:1.0.2'
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'com.android.support.test:runner:1.0.1'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
+}
