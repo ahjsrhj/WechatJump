@@ -5,12 +5,14 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.view.MotionEvent
-import android.view.View
+import android.widget.Button
+import android.widget.RelativeLayout
 
 /**
  * Created by rhj on 03/01/2018.
  */
-class FullScreenView(context: Context?) : View(context) {
+class FullScreenView(context: Context?) : RelativeLayout(context) {
+
     private val OFFSET_Y = 200
     private var mShowLine = false
     private var mFirstReady = false
@@ -21,7 +23,8 @@ class FullScreenView(context: Context?) : View(context) {
     private var mY2 = 0f
     private val mPaintRed: Paint
     private val mPaintBlue: Paint
-    private var mListener: (cmd: String) -> Unit = {}
+    private var mCmdListener: (cmd: String) -> Unit = {}
+    private var mCloseListener: () -> Unit = {}
 
     init {
         setBackgroundColor(0x40000000)
@@ -29,6 +32,11 @@ class FullScreenView(context: Context?) : View(context) {
         mPaintRed.color = Color.RED
         mPaintBlue = Paint(Paint.ANTI_ALIAS_FLAG)
         mPaintBlue.color = Color.BLUE
+
+        val button = Button(context)
+        button.text = "关闭"
+        button.setOnClickListener { mCloseListener() }
+        addView(button)
     }
 
     fun reset() {
@@ -44,6 +52,16 @@ class FullScreenView(context: Context?) : View(context) {
     override fun onTouchEvent(event: MotionEvent?): Boolean {
         when (event?.action) {
             MotionEvent.ACTION_DOWN -> {
+                if (!mFirstReady) {
+                    mX1 = event.x
+                    mY1 = event.y
+                    mShowLine = true
+                    invalidate()
+                } else if (!mSecondReady) {
+                    mX2 = event.x
+                    mY2 = event.y
+                    invalidate()
+                }
             }
             MotionEvent.ACTION_MOVE -> {
                 if (!mFirstReady) {
@@ -98,19 +116,23 @@ class FullScreenView(context: Context?) : View(context) {
         val distance = Math.sqrt(Math.pow((mX2 - mX1).toDouble(), 2.0) + Math.pow((mY2 - mY1).toDouble(), 2.0))
         val pressTime = distance * 1.35
         val command = "input swipe ${getRX()} ${getRY()} ${getRX()} ${getRY()} ${pressTime.toInt()}"
-        this.mListener(command)
+        this.mCmdListener(command)
     }
 
     private fun getRX(): Int {
         return (200 + Math.random() * 100).toInt()
     }
 
-    private fun getRY() :Int {
+    private fun getRY(): Int {
         return (1000 + Math.random() * 100).toInt()
     }
 
     fun setCommandListener(listener: (cmd: String) -> Unit) {
-        this.mListener = listener
+        this.mCmdListener = listener
+    }
+
+    fun setCloseListener(listener: () -> Unit) {
+        this.mCloseListener = listener
     }
 
 }

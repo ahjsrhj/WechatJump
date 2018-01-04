@@ -8,25 +8,26 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
-import android.support.v7.app.AppCompatActivity
+import android.util.Log
 import android.view.Gravity
 import android.view.WindowManager.LayoutParams
 import android.view.WindowManager.LayoutParams.*
 import android.widget.Button
+import android.widget.Toast
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : Activity() {
     private var show = false
     private var fullShow = false
     private var controlButton: Button? = null
-    private var fullScreenButton: FullScreenView? = null
+    private var fullScreenView: FullScreenView? = null
 
     private val fullWindowParams = LayoutParams(
             MATCH_PARENT,
             MATCH_PARENT,
             0,
             0,
-            if (Build.VERSION.SDK_INT == Build.VERSION_CODES.O) TYPE_APPLICATION_OVERLAY else TYPE_PHONE,
+            if (Build.VERSION.SDK_INT == Build.VERSION_CODES.O) TYPE_APPLICATION_OVERLAY else TYPE_SYSTEM_ALERT,
             FLAG_NOT_TOUCH_MODAL.or(FLAG_NOT_FOCUSABLE),
             PixelFormat.TRANSPARENT
     )
@@ -36,7 +37,7 @@ class MainActivity : Activity() {
             WRAP_CONTENT,
             0,
             0,
-            (if (Build.VERSION.SDK_INT == Build.VERSION_CODES.O) TYPE_APPLICATION_OVERLAY else TYPE_PHONE) + 1,
+            (if (Build.VERSION.SDK_INT == Build.VERSION_CODES.O) TYPE_APPLICATION_OVERLAY else TYPE_SYSTEM_ALERT),
             FLAG_NOT_TOUCH_MODAL.or(FLAG_NOT_FOCUSABLE),
             PixelFormat.TRANSPARENT
     )
@@ -54,17 +55,21 @@ class MainActivity : Activity() {
         windowParams.gravity = Gravity.START.or(Gravity.TOP)
 
         fullWindowParams.gravity = Gravity.START.or(Gravity.TOP)
-        fullScreenButton = FullScreenView(applicationContext)
-        fullScreenButton?.setCommandListener {
+        fullScreenView = FullScreenView(applicationContext)
+        fullScreenView?.setCloseListener {
+            showFullScreenView(false)
+        }
+
+        fullScreenView?.setCommandListener {
             if (fullShow) {
-                windowManager.removeView(fullScreenButton)
+                windowManager.removeView(fullScreenView)
                 fullShow = false
                 Thread {
                     Thread.sleep(1000)
                     Commander.execRootCmdSilent(it)
                     Thread.sleep(1000)
                     runOnUiThread {
-                        windowManager.addView(fullScreenButton, fullWindowParams)
+                        windowManager.addView(fullScreenView, fullWindowParams)
                         fullShow = true
                     }
                 }.start()
@@ -73,7 +78,10 @@ class MainActivity : Activity() {
 
         controlButton?.setOnClickListener {
             if (Commander.haveRoot()) {
-                showFullScreenView(!fullShow)
+                showFullScreenView(true)
+                showView(false)
+            } else {
+                Toast.makeText(this, "没有Root权限，不好搞啊", Toast.LENGTH_LONG).show()
             }
         }
 
@@ -90,12 +98,11 @@ class MainActivity : Activity() {
 
     private fun showFullScreenView(show: Boolean) {
         this.fullShow = show
-        this.controlButton?.text = if (show) "隐藏蒙层" else "显示蒙层"
         if (show) {
-            windowManager.addView(fullScreenButton, fullWindowParams)
+            windowManager.addView(fullScreenView, fullWindowParams)
+            fullScreenView?.reset()
         } else {
-            fullScreenButton?.reset()
-            windowManager.removeView(fullScreenButton)
+            windowManager.removeView(fullScreenView)
         }
     }
 
@@ -137,7 +144,7 @@ class MainActivity : Activity() {
             windowManager.removeView(controlButton)
         }
         if (fullShow) {
-            windowManager.removeView(fullScreenButton)
+            windowManager.removeView(fullScreenView)
         }
         super.onDestroy()
     }
