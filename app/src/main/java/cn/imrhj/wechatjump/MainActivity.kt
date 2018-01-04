@@ -11,15 +11,14 @@ import android.support.v7.app.AppCompatActivity
 import android.view.Gravity
 import android.view.WindowManager.LayoutParams
 import android.view.WindowManager.LayoutParams.*
-import android.widget.ImageView
-import android.widget.Toast
+import android.widget.Button
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
     private var show = false
     private var fullShow = false
-    private var view: ImageView? = null
-    private var fullScreen: FullScreenView? = null
+    private var controlButton: Button? = null
+    private var fullScreenButton: FullScreenView? = null
 
     private val fullWindowParams = LayoutParams(
             MATCH_PARENT,
@@ -49,29 +48,29 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initView() {
-        view = ImageView(applicationContext)
-        view?.setImageResource(R.mipmap.ic_launcher)
+        controlButton = Button(applicationContext)
+        controlButton?.text = "显示蒙层"
         windowParams.gravity = Gravity.START.or(Gravity.TOP)
 
         fullWindowParams.gravity = Gravity.START.or(Gravity.TOP)
-        fullScreen = FullScreenView(applicationContext)
-        fullScreen?.setCommandListener {
+        fullScreenButton = FullScreenView(applicationContext)
+        fullScreenButton?.setCommandListener {
             if (fullShow) {
-                windowManager.removeView(fullScreen)
+                windowManager.removeView(fullScreenButton)
                 fullShow = false
                 Thread {
                     Thread.sleep(1000)
                     Commander.execRootCmdSilent(it)
                     Thread.sleep(1000)
                     runOnUiThread {
-                        windowManager.addView(fullScreen, fullWindowParams)
+                        windowManager.addView(fullScreenButton, fullWindowParams)
                         fullShow = true
                     }
                 }.start()
             }
         }
 
-        view?.setOnClickListener {
+        controlButton?.setOnClickListener {
             if (Commander.haveRoot()) {
                 showFullScreenView(!fullShow)
             }
@@ -90,11 +89,12 @@ class MainActivity : AppCompatActivity() {
 
     private fun showFullScreenView(show: Boolean) {
         this.fullShow = show
+        this.controlButton?.text = if (show) "隐藏蒙层" else "显示蒙层"
         if (show) {
-            windowManager.addView(fullScreen, fullWindowParams)
+            windowManager.addView(fullScreenButton, fullWindowParams)
         } else {
-            fullScreen?.reset()
-            windowManager.removeView(fullScreen)
+            fullScreenButton?.reset()
+            windowManager.removeView(fullScreenButton)
         }
     }
 
@@ -104,9 +104,9 @@ class MainActivity : AppCompatActivity() {
     private fun showView(show: Boolean) {
         this.show = show
         if (show) {
-            windowManager.addView(view, windowParams)
+            windowManager.addView(controlButton, windowParams)
         } else {
-            windowManager.removeView(view)
+            windowManager.removeView(controlButton)
         }
         button.text = if (show) "隐藏悬浮窗" else "显示悬浮窗"
     }
@@ -133,10 +133,10 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         if (show) {
-            windowManager.removeView(view)
+            windowManager.removeView(controlButton)
         }
         if (fullShow) {
-            windowManager.removeView(fullScreen)
+            windowManager.removeView(fullScreenButton)
         }
         super.onDestroy()
     }

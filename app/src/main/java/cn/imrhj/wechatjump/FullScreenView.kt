@@ -97,8 +97,16 @@ class FullScreenView(context: Context?) : View(context) {
         // 获取距离
         val distance = Math.sqrt(Math.pow((mX2 - mX1).toDouble(), 2.0) + Math.pow((mY2 - mY1).toDouble(), 2.0))
         val pressTime = distance * 1.35
-        val command = "input swipe 320 410 320 410 ${pressTime.toInt()}"
+        val command = "input swipe ${getRX()} ${getRY()} ${getRX()} ${getRY()} ${pressTime.toInt()}"
         this.mListener(command)
+    }
+
+    private fun getRX(): Int {
+        return (200 + Math.random() * 100).toInt()
+    }
+
+    private fun getRY() :Int {
+        return (1000 + Math.random() * 100).toInt()
     }
 
     fun setCommandListener(listener: (cmd: String) -> Unit) {
