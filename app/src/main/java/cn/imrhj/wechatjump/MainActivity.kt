@@ -7,27 +7,32 @@ import android.graphics.PixelFormat
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.preference.PreferenceManager
 import android.provider.Settings
-import android.util.Log
+import android.util.DisplayMetrics
 import android.view.Gravity
 import android.view.WindowManager.LayoutParams
 import android.view.WindowManager.LayoutParams.*
 import android.widget.Button
+import android.widget.TextView
 import android.widget.Toast
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : Activity() {
+    private val PRESS_COEFFICIENT_PREF = "PRESS_COEFFICIENT_PREF"
     private var show = false
     private var fullShow = false
     private var controlButton: Button? = null
     private var fullScreenView: FullScreenView? = null
+    private var mDisplayMetrics = DisplayMetrics()
+    private var mDefaultPressCoefficient: Double = 1.392
 
     private val fullWindowParams = LayoutParams(
             MATCH_PARENT,
             MATCH_PARENT,
             0,
             0,
-            if (Build.VERSION.SDK_INT == Build.VERSION_CODES.O) TYPE_APPLICATION_OVERLAY else TYPE_SYSTEM_ALERT,
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) TYPE_APPLICATION_OVERLAY else TYPE_SYSTEM_ALERT,
             FLAG_NOT_TOUCH_MODAL.or(FLAG_NOT_FOCUSABLE),
             PixelFormat.TRANSPARENT
     )
@@ -37,7 +42,7 @@ class MainActivity : Activity() {
             WRAP_CONTENT,
             0,
             0,
-            (if (Build.VERSION.SDK_INT == Build.VERSION_CODES.O) TYPE_APPLICATION_OVERLAY else TYPE_SYSTEM_ALERT),
+            (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) TYPE_APPLICATION_OVERLAY else TYPE_SYSTEM_ALERT),
             FLAG_NOT_TOUCH_MODAL.or(FLAG_NOT_FOCUSABLE),
             PixelFormat.TRANSPARENT
     )
@@ -46,16 +51,21 @@ class MainActivity : Activity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         initView()
-
     }
 
     private fun initView() {
+        val sharedPreference = PreferenceManager.getDefaultSharedPreferences(this)
+
+        //获取屏幕分辨率
+        windowManager.defaultDisplay.getRealMetrics(mDisplayMetrics)
+
         controlButton = Button(applicationContext)
         controlButton?.text = "显示蒙层"
         windowParams.gravity = Gravity.START.or(Gravity.TOP)
 
         fullWindowParams.gravity = Gravity.START.or(Gravity.TOP)
-        fullScreenView = FullScreenView(applicationContext)
+        fullScreenView = FullScreenView(applicationContext, mDisplayMetrics.heightPixels)
+        mDefaultPressCoefficient = fullScreenView?.getPressConfig() ?: mDefaultPressCoefficient
         fullScreenView?.setCloseListener {
             showFullScreenView(false)
         }
@@ -93,6 +103,38 @@ class MainActivity : Activity() {
             } else {
                 showView(!show)
             }
+        }
+
+        // 初始化偏好
+        val defaultPressCoefficient = fullScreenView?.getPressConfig()?.toFloat() ?: 1.392f
+        val personPressCoefficient = sharedPreference.getFloat(PRESS_COEFFICIENT_PREF, defaultPressCoefficient)
+        if (defaultPressCoefficient != personPressCoefficient) {
+            fullScreenView?.setConfig(personPressCoefficient.toDouble())
+        }
+
+        etPressCoefficient.setText(personPressCoefficient.toString(), TextView.BufferType.EDITABLE)
+        btnCoefficient.setOnClickListener {
+            // 设置值
+            val coefficient = etPressCoefficient.text.toString().toDoubleOrNull()
+            if (coefficient == null || coefficient == 0.0) {
+                Toast.makeText(this, "请检查输入的值", Toast.LENGTH_LONG).show()
+                return@setOnClickListener
+            }
+            // 首先隐藏所有显示的
+            if (fullShow) showFullScreenView(false)
+            if (show) showView(false)
+            fullScreenView?.setConfig(coefficient)
+            // 存储
+            sharedPreference.edit().putFloat(PRESS_COEFFICIENT_PREF, coefficient.toFloat()).apply()
+            Toast.makeText(this, "设置成功", Toast.LENGTH_LONG).show()
+        }
+        btnReset.setOnClickListener {
+            if (fullShow) showFullScreenView(false)
+            if (show) showView(false)
+            etPressCoefficient.setText(mDefaultPressCoefficient.toString(), TextView.BufferType.EDITABLE)
+            sharedPreference.edit().putFloat(PRESS_COEFFICIENT_PREF, mDefaultPressCoefficient.toFloat()).apply()
+            fullScreenView?.setConfig(mDefaultPressCoefficient)
+            Toast.makeText(this, "恢复默认值成功", Toast.LENGTH_LONG).show()
         }
     }
 

@@ -4,14 +4,19 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.util.Log
 import android.view.MotionEvent
 import android.widget.Button
 import android.widget.RelativeLayout
+import cn.imrhj.wechatjump.config.Config1280x720
+import cn.imrhj.wechatjump.config.Config1920x1080
+import cn.imrhj.wechatjump.config.Config2160x1080
+import cn.imrhj.wechatjump.config.Config2560x1440
 
 /**
  * Created by rhj on 03/01/2018.
  */
-class FullScreenView(context: Context?) : RelativeLayout(context) {
+class FullScreenView(context: Context?, height: Int) : RelativeLayout(context) {
 
     private val OFFSET_Y = 200
     private var mShowLine = false
@@ -26,6 +31,12 @@ class FullScreenView(context: Context?) : RelativeLayout(context) {
     private var mCmdListener: (cmd: String) -> Unit = {}
     private var mCloseListener: () -> Unit = {}
 
+    private var mSwipeX1: Int
+    private var mSwipeY1: Int
+    private var mSwipeX2: Int
+    private var mSwipeY2: Int
+    private var mPressCoefficient: Double
+
     init {
         setBackgroundColor(0x40000000)
         mPaintRed = Paint(Paint.ANTI_ALIAS_FLAG)
@@ -37,6 +48,46 @@ class FullScreenView(context: Context?) : RelativeLayout(context) {
         button.text = "关闭"
         button.setOnClickListener { mCloseListener() }
         addView(button)
+        Log.d(Thread.currentThread().name, "class = FullScreenView rhjlog : " + height)
+
+        when (height) {
+            1280 -> {
+                mSwipeX1 = Config1280x720.SWIPE_X1
+                mSwipeY1 = Config1280x720.SWIPE_Y1
+                mSwipeX2 = Config1280x720.SWIPE_X2
+                mSwipeY2 = Config1280x720.SWIPE_Y2
+                mPressCoefficient = Config1280x720.PRESS_COEFFICIENT
+            }
+            1920 -> { //1080p
+                mSwipeX1 = Config1920x1080.SWIPE_X1
+                mSwipeY1 = Config1920x1080.SWIPE_Y1
+                mSwipeX2 = Config1920x1080.SWIPE_X2
+                mSwipeY2 = Config1920x1080.SWIPE_Y2
+                mPressCoefficient = Config1920x1080.PRESS_COEFFICIENT
+            }
+            2160 -> {
+                mSwipeX1 = Config2160x1080.SWIPE_X1
+                mSwipeY1 = Config2160x1080.SWIPE_Y1
+                mSwipeX2 = Config2160x1080.SWIPE_X2
+                mSwipeY2 = Config2160x1080.SWIPE_Y2
+                mPressCoefficient = Config2160x1080.PRESS_COEFFICIENT
+            }
+            2560 -> {
+                mSwipeX1 = Config2160x1080.SWIPE_X1
+                mSwipeY1 = Config2160x1080.SWIPE_Y1
+                mSwipeX2 = Config2160x1080.SWIPE_X2
+                mSwipeY2 = Config2160x1080.SWIPE_Y2
+                mPressCoefficient = Config2160x1080.PRESS_COEFFICIENT
+            }
+            else -> {
+                mSwipeX1 = Config2560x1440.SWIPE_X1
+                mSwipeY1 = Config2560x1440.SWIPE_Y1
+                mSwipeX2 = Config2560x1440.SWIPE_X2
+                mSwipeY2 = Config2560x1440.SWIPE_Y2
+                mPressCoefficient = Config2560x1440.PRESS_COEFFICIENT
+            }
+        }
+
     }
 
     fun reset() {
@@ -114,17 +165,14 @@ class FullScreenView(context: Context?) : RelativeLayout(context) {
     private fun doCommand() {
         // 获取距离
         val distance = Math.sqrt(Math.pow((mX2 - mX1).toDouble(), 2.0) + Math.pow((mY2 - mY1).toDouble(), 2.0))
-        val pressTime = distance * 1.35
-        val command = "input swipe ${getRX()} ${getRY()} ${getRX()} ${getRY()} ${pressTime.toInt()}"
+        val pressTime = distance * mPressCoefficient
+        val command = "input swipe ${getRdm(mSwipeX1)} ${getRdm(mSwipeY1)} ${getRdm(mSwipeX2)} ${getRdm(mSwipeY2)} ${pressTime.toInt()}"
         this.mCmdListener(command)
     }
 
-    private fun getRX(): Int {
-        return (200 + Math.random() * 100).toInt()
-    }
+    private fun getRdm(value: Int): Int {
+        return (value + Math.random() * 50).toInt()
 
-    private fun getRY(): Int {
-        return (1000 + Math.random() * 100).toInt()
     }
 
     fun setCommandListener(listener: (cmd: String) -> Unit) {
@@ -134,5 +182,14 @@ class FullScreenView(context: Context?) : RelativeLayout(context) {
     fun setCloseListener(listener: () -> Unit) {
         this.mCloseListener = listener
     }
+
+    fun setConfig(pressCoefficient: Double) {
+        this.mPressCoefficient = pressCoefficient
+    }
+
+    fun getPressConfig(): Double {
+        return mPressCoefficient
+    }
+
 
 }

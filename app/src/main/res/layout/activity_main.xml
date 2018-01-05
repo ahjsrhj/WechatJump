@@ -1,16 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:gravity="center_horizontal"
+    android:orientation="vertical"
     android:padding="12dp"
     tools:context="cn.imrhj.wechatjump.MainActivity">
 
     <TextView
-        android:id="@+id/tips"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="安装并打开app,点击显示悬浮窗，6.0及以上系统需要授予悬浮窗权限，之后打开跳一跳，点击左上角的icon，此时会询问Root权限，授权之后会有蒙层糊在屏幕上，之后依次点击并拖动确定好两个点，第二次松手后会自动跳跃，等蒙层再次出现继续点击即可。再次点击右上角按钮可隐藏蒙层。"
+        android:text="安装并打开app,点击显示悬浮窗，6.0及以上系统需要授予悬浮窗权限，之后打开跳一跳，点击左上角的显示蒙层，此时会询问Root权限，授权之后会有蒙层糊在屏幕上，之后依次点击并拖动确定好两个点，第二次松手后会自动跳跃，等蒙层再次出现继续点击即可。再次点击右上角按钮可隐藏蒙层。"
         android:textColor="@android:color/black"
         android:textSize="14sp" />
 
@@ -18,12 +19,51 @@
         android:id="@+id/button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/tips"
-        android:layout_centerInParent="true"
-        android:text="显示悬浮窗"
         android:layout_marginBottom="8dp"
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp" />
+        android:layout_marginTop="8dp"
+        android:text="显示悬浮窗" />
 
-</RelativeLayout>
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="注:当前版本已经适配1280*720，1920*1080，2160*1080，2560*1440等常见分辨率，如遇到跳不准或者未适配情况，请在下方调整按压系数并重试"
+        android:textColor="@android:color/black"
+        android:textSize="14sp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="当前系数:" />
+
+        <EditText
+            android:id="@+id/etPressCoefficient"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:inputType="numberDecimal" />
+
+        <Button
+            android:id="@+id/btnCoefficient"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="设置" />
+
+        <Button
+            android:id="@+id/btnReset"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="默认" />
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+
+</LinearLayout>
