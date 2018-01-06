@@ -4,10 +4,11 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
-import android.util.Log
 import android.view.MotionEvent
+import android.view.View
 import android.widget.Button
 import android.widget.RelativeLayout
+import android.widget.TextView
 import cn.imrhj.wechatjump.config.Config1280x720
 import cn.imrhj.wechatjump.config.Config1920x1080
 import cn.imrhj.wechatjump.config.Config2160x1080
@@ -30,12 +31,19 @@ class FullScreenView(context: Context?, height: Int) : RelativeLayout(context) {
     private val mPaintBlue: Paint
     private var mCmdListener: (cmd: String) -> Unit = {}
     private var mCloseListener: () -> Unit = {}
+    private var mUpdateValueListener: (value: Double) -> Unit = {}
 
     private var mSwipeX1: Int
     private var mSwipeY1: Int
     private var mSwipeX2: Int
     private var mSwipeY2: Int
     private var mPressCoefficient: Double
+
+    private var mDebugViewAdd: Boolean = false
+    private var mDebugView: View
+    private var mCoefficientView :TextView
+
+    private var mType = 0   // 0 点按模式 1 滑动模式
 
     init {
         setBackgroundColor(0x40000000)
@@ -45,10 +53,20 @@ class FullScreenView(context: Context?, height: Int) : RelativeLayout(context) {
         mPaintBlue.color = Color.BLUE
 
         val button = Button(context)
-        button.text = "关闭"
+        button.id = View.generateViewId()
+        button.text = "隐藏"
         button.setOnClickListener { mCloseListener() }
         addView(button)
-        Log.d(Thread.currentThread().name, "class = FullScreenView rhjlog : " + height)
+
+        val typeButton = Button(context)
+        typeButton.text = "切换滑动模式"
+        typeButton.setOnClickListener {
+            mType = if (mType == 0) 1 else 0
+            typeButton.text = if (mType == 0) "切换滑动模式" else "切换点按模式"
+        }
+        val layoutParams = LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT)
+        layoutParams.addRule(RelativeLayout.END_OF, button.id)
+        addView(typeButton, layoutParams)
 
         when (height) {
             1280 -> {
@@ -88,7 +106,15 @@ class FullScreenView(context: Context?, height: Int) : RelativeLayout(context) {
             }
         }
 
+        mDebugView = View.inflate(context, R.layout.view_debug, null)
+        mCoefficientView = mDebugView.findViewById<TextView>(R.id.tv_coefficient)
+        mCoefficientView.text = mPressCoefficient.toString()
+        val upButton = mDebugView.findViewById<Button>(R.id.btn_up)
+        val downButton = mDebugView.findViewById<Button>(R.id.btn_down)
+        upButton.setOnClickListener { changeCoefficient(true) }
+        downButton.setOnClickListener { changeCoefficient(false) }
     }
+
 
     fun reset() {
         mShowLine = false
@@ -101,6 +127,24 @@ class FullScreenView(context: Context?, height: Int) : RelativeLayout(context) {
     }
 
     override fun onTouchEvent(event: MotionEvent?): Boolean {
+        when (mType) {
+            0 -> onType0Touch(event)
+            1 -> onType1Touch(event)
+        }
+
+        return super.onTouchEvent(event)
+    }
+
+    override fun onDraw(canvas: Canvas?) {
+        if (mType == 0 && mShowLine) {
+            drawLine(canvas, mX1, mY1 - OFFSET_Y, mPaintRed)
+            if (mFirstReady) {
+                drawLine(canvas, mX2, mY2 - OFFSET_Y, mPaintBlue)
+            }
+        }
+    }
+
+    private fun onType0Touch(event: MotionEvent?) {
         when (event?.action) {
             MotionEvent.ACTION_DOWN -> {
                 if (!mFirstReady) {
@@ -145,14 +189,18 @@ class FullScreenView(context: Context?, height: Int) : RelativeLayout(context) {
             doCommand()
             reset()
         }
-        return super.onTouchEvent(event)
     }
 
-    override fun onDraw(canvas: Canvas?) {
-        if (mShowLine) {
-            drawLine(canvas, mX1, mY1 - OFFSET_Y, mPaintRed)
-            if (mFirstReady) {
-                drawLine(canvas, mX2, mY2 - OFFSET_Y, mPaintBlue)
+    private fun onType1Touch(event: MotionEvent?) {
+        when (event?.action) {
+            MotionEvent.ACTION_DOWN -> {
+                mX1 = event.x
+                mY1 = event.y
+            }
+            MotionEvent.ACTION_UP -> {
+                mX2 = event.x
+                mY2 = event.y
+                doCommand()
             }
         }
     }
@@ -175,6 +223,12 @@ class FullScreenView(context: Context?, height: Int) : RelativeLayout(context) {
 
     }
 
+    private fun changeCoefficient(add: Boolean) {
+        mPressCoefficient += if (add) 0.01 else -0.01
+//        mUpdateValueListener(mPressCoefficient)
+        mCoefficientView.text = mPressCoefficient.toString()
+    }
+
     fun setCommandListener(listener: (cmd: String) -> Unit) {
         this.mCmdListener = listener
     }
@@ -183,12 +237,34 @@ class FullScreenView(context: Context?, height: Int) : RelativeLayout(context) {
         this.mCloseListener = listener
     }
 
+    fun setUpdateValueListener(listener: (value: Double) -> Unit) {
+        this.mUpdateValueListener = listener
+    }
+
     fun setConfig(pressCoefficient: Double) {
         this.mPressCoefficient = pressCoefficient
+        mCoefficientView.text = mPressCoefficient.toString()
+
     }
 
     fun getPressConfig(): Double {
         return mPressCoefficient
+    }
+
+    fun setDebug(enable: Boolean) {
+        if (enable) {
+            if (!mDebugViewAdd) {
+                val params = LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT)
+                params.addRule(RelativeLayout.ALIGN_PARENT_END)
+                addView(mDebugView, params)
+                mDebugViewAdd = true
+            }
+        } else {
+            if (mDebugViewAdd) {
+                removeView(mDebugView)
+                mDebugViewAdd = false
+            }
+        }
     }
 
 

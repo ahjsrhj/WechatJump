@@ -3,6 +3,7 @@ package cn.imrhj.wechatjump
 import android.annotation.TargetApi
 import android.app.Activity
 import android.content.Intent
+import android.content.SharedPreferences
 import android.graphics.PixelFormat
 import android.net.Uri
 import android.os.Build
@@ -68,14 +69,14 @@ class MainActivity : Activity() {
         mDefaultPressCoefficient = fullScreenView?.getPressConfig() ?: mDefaultPressCoefficient
         fullScreenView?.setCloseListener {
             showFullScreenView(false)
+            showView(true)
         }
-
         fullScreenView?.setCommandListener {
             if (fullShow) {
                 windowManager.removeView(fullScreenView)
                 fullShow = false
                 Thread {
-//                    Thread.sleep(50)
+                    //                    Thread.sleep(50)
                     Commander.execRootCmdSilent(it)
 //                    Thread.sleep(500)
                     runOnUiThread {
@@ -84,6 +85,9 @@ class MainActivity : Activity() {
                     }
                 }.start()
             }
+        }
+        fullScreenView?.setUpdateValueListener {
+            updatePressCoefficient(it, sharedPreference)
         }
 
         controlButton?.setOnClickListener {
@@ -125,8 +129,7 @@ class MainActivity : Activity() {
             if (show) showView(false)
             fullScreenView?.setConfig(coefficient)
             // 存储
-            sharedPreference.edit().putFloat(PRESS_COEFFICIENT_PREF, coefficient.toFloat()).apply()
-            Toast.makeText(this, "设置成功", Toast.LENGTH_LONG).show()
+            updatePressCoefficient(coefficient, sharedPreference)
         }
         btnReset.setOnClickListener {
             if (fullShow) showFullScreenView(false)
@@ -143,9 +146,16 @@ class MainActivity : Activity() {
         if (show) {
             windowManager.addView(fullScreenView, fullWindowParams)
             fullScreenView?.reset()
+            fullScreenView?.setDebug(toggle.isChecked)
         } else {
             windowManager.removeView(fullScreenView)
         }
+    }
+
+    private fun updatePressCoefficient(value: Double, sharedPreference: SharedPreferences) {
+        // 存储
+        sharedPreference.edit().putFloat(PRESS_COEFFICIENT_PREF, value.toFloat()).apply()
+        Toast.makeText(this, "设置成功", Toast.LENGTH_LONG).show()
     }
 
     /**

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="horizontal"
+    android:background="@android:color/white"
+    android:gravity="center_vertical"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
+    <TextView
+        android:id="@+id/tv_coefficient"
+        android:layout_width="80dp"
+        android:textSize="16sp"
+        android:lines="1"
+        android:textColor="@android:color/black"
+        android:layout_height="wrap_content" />
+
+    <Button
+        android:id="@+id/btn_up"
+        android:text="↑"
+        android:layout_width="40dp"
+        android:layout_height="40dp" />
+    <Button
+        android:id="@+id/btn_down"
+        android:text="↓"
+        android:layout_width="40dp"
+        android:layout_height="40dp" />
+</LinearLayout>
