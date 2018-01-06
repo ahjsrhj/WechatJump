@@ -75,9 +75,9 @@ class MainActivity : Activity() {
                 windowManager.removeView(fullScreenView)
                 fullShow = false
                 Thread {
-                    Thread.sleep(1000)
+//                    Thread.sleep(50)
                     Commander.execRootCmdSilent(it)
-                    Thread.sleep(1000)
+//                    Thread.sleep(500)
                     runOnUiThread {
                         windowManager.addView(fullScreenView, fullWindowParams)
                         fullShow = true
