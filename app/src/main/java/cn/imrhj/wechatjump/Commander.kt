@@ -1,6 +1,7 @@
 package cn.imrhj.wechatjump
 
 import android.util.Log
+import com.elvishew.xlog.XLog
 import java.io.DataOutputStream
 import java.io.IOException
 
@@ -13,10 +14,10 @@ object Commander {
         if (!mHaveRoot) {
             val result = execRootCmdSilent("echo test")
             if (result != -1) {
-                Log.d(Thread.currentThread().name, "class = Commander rhjlog haveRoot: true")
+                XLog.d("class = Commander rhjlog haveRoot: true")
                 mHaveRoot = true
             } else {
-                Log.d(Thread.currentThread().name, "class = Commander rhjlog haveRoot: false")
+                XLog.d("class = Commander rhjlog haveRoot: false")
             }
         }
         return mHaveRoot
@@ -29,7 +30,7 @@ object Commander {
             val process = Runtime.getRuntime().exec("su")
             dos = DataOutputStream(process.outputStream)
 
-            Log.d(Thread.currentThread().name, "class = Commander rhjlog execRootCmdSilent: " + cmd)
+            XLog.d("class = Commander rhjlog execRootCmdSilent: $cmd")
             dos.writeBytes(cmd + "\n")
             dos.flush()
             dos.writeBytes("exit\n")
@@ -37,7 +38,7 @@ object Commander {
             process.waitFor()
             result = process.exitValue()
         } catch (e: Exception) {
-            e.printStackTrace()
+            XLog.d("class = Commander rhjlog execRootCmdSilent: error ", e)
         } finally {
             try {
                 dos?.close()

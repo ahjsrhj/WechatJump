@@ -81,5 +81,11 @@
 
     </LinearLayout>
 
+    <Button
+        android:id="@+id/debugCopyButton"
+        android:text="复制日志"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
 
 </LinearLayout>

@@ -2,8 +2,7 @@ package cn.imrhj.wechatjump
 
 import android.annotation.TargetApi
 import android.app.Activity
-import android.content.Intent
-import android.content.SharedPreferences
+import android.content.*
 import android.graphics.PixelFormat
 import android.net.Uri
 import android.os.Build
@@ -12,12 +11,16 @@ import android.preference.PreferenceManager
 import android.provider.Settings
 import android.util.DisplayMetrics
 import android.view.Gravity
+import android.view.View
 import android.view.WindowManager.LayoutParams
 import android.view.WindowManager.LayoutParams.*
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
+import com.elvishew.xlog.XLog
 import kotlinx.android.synthetic.main.activity_main.*
+import java.io.BufferedReader
+import java.io.FileReader
 
 class MainActivity : Activity() {
     private val PRESS_COEFFICIENT_PREF = "PRESS_COEFFICIENT_PREF"
@@ -72,12 +75,16 @@ class MainActivity : Activity() {
             showView(true)
         }
         fullScreenView?.setCommandListener {
+            XLog.d("class = MainActivity rhjlog initView: getCommand $it")
             if (fullShow) {
                 windowManager.removeView(fullScreenView)
                 fullShow = false
                 Thread {
                     //                    Thread.sleep(50)
-                    Commander.execRootCmdSilent(it)
+                    val result = Commander.execRootCmdSilent(it)
+                    if (result != -1) {
+                        XLog.d("class = MainActivity rhjlog initView: run status ${result != -1}")
+                    }
 //                    Thread.sleep(500)
                     runOnUiThread {
                         windowManager.addView(fullScreenView, fullWindowParams)
@@ -139,9 +146,15 @@ class MainActivity : Activity() {
             fullScreenView?.setConfig(mDefaultPressCoefficient)
             Toast.makeText(this, "恢复默认值成功", Toast.LENGTH_LONG).show()
         }
+        if (BuildConfig.DEBUG) {
+            debugCopyButton.visibility = View.VISIBLE
+            debugCopyButton.setOnClickListener { copyLog() }
+        }
+
     }
 
     private fun showFullScreenView(show: Boolean) {
+        XLog.d("class = MainActivity rhjlog showFullScreenView: $show")
         this.fullShow = show
         if (show) {
             windowManager.addView(fullScreenView, fullWindowParams)
@@ -162,6 +175,7 @@ class MainActivity : Activity() {
      * 初始化view,添加悬浮窗
      */
     private fun showView(show: Boolean) {
+        XLog.d("class = MainActivity rhjlog showView: $show")
         this.show = show
         if (show) {
             windowManager.addView(controlButton, windowParams)
@@ -199,6 +213,27 @@ class MainActivity : Activity() {
             windowManager.removeView(fullScreenView)
         }
         super.onDestroy()
+    }
+
+    private fun copyLog() {
+        var bufferReader: BufferedReader? = null
+        var stringBuilder = StringBuilder()
+        var tmpStr: String? = null
+        try {
+            bufferReader = BufferedReader(FileReader(cacheDir.absolutePath + "/log/log"))
+            tmpStr = bufferReader.readLine()
+            while (tmpStr?.isNotBlank() == true) {
+                stringBuilder.append(tmpStr)
+                tmpStr = bufferReader.readLine()
+            }
+            val clipData = ClipData.newPlainText("log", stringBuilder.toString())
+            (getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager).primaryClip = clipData
+            Toast.makeText(this, "复制成功，快去粘贴吧~", Toast.LENGTH_LONG).show()
+        } catch (e: Exception) {
+            Toast.makeText(this, "复制失败， $e", Toast.LENGTH_LONG).show()
+        } finally {
+            bufferReader?.close()
+        }
     }
 
 }

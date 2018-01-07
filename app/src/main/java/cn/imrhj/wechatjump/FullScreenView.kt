@@ -13,6 +13,7 @@ import cn.imrhj.wechatjump.config.Config1280x720
 import cn.imrhj.wechatjump.config.Config1920x1080
 import cn.imrhj.wechatjump.config.Config2160x1080
 import cn.imrhj.wechatjump.config.Config2560x1440
+import com.elvishew.xlog.XLog
 
 /**
  * Created by rhj on 03/01/2018.
@@ -107,7 +108,7 @@ class FullScreenView(context: Context?, height: Int) : RelativeLayout(context) {
         }
 
         mDebugView = View.inflate(context, R.layout.view_debug, null)
-        mCoefficientView = mDebugView.findViewById<TextView>(R.id.tv_coefficient)
+        mCoefficientView = mDebugView.findViewById(R.id.tv_coefficient)
         mCoefficientView.text = mPressCoefficient.toString()
         val upButton = mDebugView.findViewById<Button>(R.id.btn_up)
         val downButton = mDebugView.findViewById<Button>(R.id.btn_down)
@@ -213,6 +214,7 @@ class FullScreenView(context: Context?, height: Int) : RelativeLayout(context) {
     private fun doCommand() {
         // 获取距离
         val distance = Math.sqrt(Math.pow((mX2 - mX1).toDouble(), 2.0) + Math.pow((mY2 - mY1).toDouble(), 2.0))
+        XLog.d("class = FullScreenView rhjlog doCommand: distance =  $distance")
         val pressTime = distance * mPressCoefficient
         val command = "input swipe ${getRdm(mSwipeX1)} ${getRdm(mSwipeY1)} ${getRdm(mSwipeX2)} ${getRdm(mSwipeY2)} ${pressTime.toInt()}"
         this.mCmdListener(command)
